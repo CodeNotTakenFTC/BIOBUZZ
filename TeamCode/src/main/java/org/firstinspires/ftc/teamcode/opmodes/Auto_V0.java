@@ -60,7 +60,7 @@ public class Auto_V0 extends LinearOpMode {
         outtakeRight.setVelocity(targetVelocity);
         //sleep(chargeTime);
 
-        //intake.setPower(1.0);
+        intake.setPower(1.0);
 
         Actions.runBlocking(drive.actionBuilder(drive.localizer.getPose())
                 .waitSeconds(0.0)
