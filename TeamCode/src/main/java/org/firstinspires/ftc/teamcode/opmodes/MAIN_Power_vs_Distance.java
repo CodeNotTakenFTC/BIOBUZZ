@@ -28,7 +28,8 @@ public class MAIN_Power_vs_Distance extends LinearOpMode {
         DcMotor frontRight = hardwareMap.get(DcMotor.class, "front_right");
         DcMotor backRight = hardwareMap.get(DcMotor.class, "back_right");
         DcMotorEx outtake = hardwareMap.get(DcMotorEx.class, "outtake");
-        // TODO add intake, transfer, turret motors
+        DcMotor intake = hardwareMap.get(DcMotor.class, "intake");
+        // TODO add transfer, turret motors
         // TODO add servos
 
         // Motor Directions
@@ -36,7 +37,9 @@ public class MAIN_Power_vs_Distance extends LinearOpMode {
         backLeft.setDirection(DcMotor.Direction.REVERSE);
         frontRight.setDirection(DcMotor.Direction.FORWARD);
         backRight.setDirection(DcMotor.Direction.FORWARD);
-        // TODO add intake, transfer, turret motors
+        outtake.setDirection(DcMotor.Direction.FORWARD);
+        intake.setDirection(DcMotor.Direction.REVERSE);
+        // TODO add transfer, turret motors
 
         // Zero Power Behavior
         frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -44,6 +47,7 @@ public class MAIN_Power_vs_Distance extends LinearOpMode {
         frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         outtake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         // TODO add intake, transfer, turret motors
 
         // Limelight Initialization
@@ -59,8 +63,8 @@ public class MAIN_Power_vs_Distance extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            double y = -gamepad1.left_stick_y; // Forward/Backward
-            double x = gamepad1.left_stick_x;  // Strafe
+            double ly = -gamepad1.left_stick_y; // Forward/Backward
+            double lx = gamepad1.left_stick_x;  // Strafe
             double rx = gamepad1.right_stick_x; // Turn
 
             // Hold 'a' to auto aim and adjust power for distance
@@ -106,13 +110,20 @@ public class MAIN_Power_vs_Distance extends LinearOpMode {
             } else outtake.setVelocity(0);
 
             // TODO outtake, intake, transfer, turret motor controls
+            if (gamepad1.right_trigger > 0.1) {
+                double intakePower = 1.0;
+                intake.setPower(intakePower);
+            }
+            else {
+                intake.setPower(0.0);
+            }
 
             // DRIVING CALCULATIONS
-            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1.0);
-            frontLeft.setPower((y + x + rx) / denominator);
-            backLeft.setPower((y - x + rx) / denominator);
-            frontRight.setPower((y - x - rx) / denominator);
-            backRight.setPower((y + x - rx) / denominator);
+            double denominator = Math.max(Math.abs(ly) + Math.abs(lx) + Math.abs(rx), 1.0);
+            frontLeft.setPower((ly + lx + rx) / denominator);
+            backLeft.setPower((ly - lx + rx) / denominator);
+            frontRight.setPower((ly - lx - rx) / denominator);
+            backRight.setPower((ly + lx - rx) / denominator);
 
             telemetry.update();
         }
