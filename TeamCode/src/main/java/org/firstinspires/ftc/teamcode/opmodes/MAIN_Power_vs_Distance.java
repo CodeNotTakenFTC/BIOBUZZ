@@ -19,6 +19,7 @@ public class MAIN_Power_vs_Distance extends LinearOpMode {
 
     // 6000 RPM / 60 SEC/MIN * 28 TICKS/REV
     private static final double MAX_TICKS = 6000.0 / 60.0 * 28.0;
+    private static double outtakePower = 0.40;
 
     @Override
     public void runOpMode() {
@@ -27,18 +28,17 @@ public class MAIN_Power_vs_Distance extends LinearOpMode {
         DcMotor backLeft = hardwareMap.get(DcMotor.class, "back_left");
         DcMotor frontRight = hardwareMap.get(DcMotor.class, "front_right");
         DcMotor backRight = hardwareMap.get(DcMotor.class, "back_right");
-        DcMotorEx outtake = hardwareMap.get(DcMotorEx.class, "outtake");
         DcMotor intake = hardwareMap.get(DcMotor.class, "intake");
-        // TODO add transfer, turret motors
-        // TODO add servos
+        DcMotorEx outtake = hardwareMap.get(DcMotorEx.class, "outtake");
+        // TODO add transfer, turret motors/servos
 
         // Motor Directions
         frontLeft.setDirection(DcMotor.Direction.REVERSE);
         backLeft.setDirection(DcMotor.Direction.REVERSE);
         frontRight.setDirection(DcMotor.Direction.FORWARD);
         backRight.setDirection(DcMotor.Direction.FORWARD);
-        outtake.setDirection(DcMotor.Direction.FORWARD);
         intake.setDirection(DcMotor.Direction.REVERSE);
+        outtake.setDirection(DcMotor.Direction.FORWARD);
         // TODO add transfer, turret motors
 
         // Zero Power Behavior
@@ -46,9 +46,13 @@ public class MAIN_Power_vs_Distance extends LinearOpMode {
         backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        outtake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        // TODO add intake, transfer, turret motors
+        outtake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        // TODO add transfer, turret motors
+
+        // Set outtake motors to use encoder-based velocity control
+        outtake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // TODO set PIDF coefficients
 
         // Limelight Initialization
         Limelight3A limelight = hardwareMap.get(Limelight3A.class, "limelight");
@@ -67,8 +71,39 @@ public class MAIN_Power_vs_Distance extends LinearOpMode {
             double lx = gamepad1.left_stick_x;  // Strafe
             double rx = gamepad1.right_stick_x; // Turn
 
-            // Hold 'a' to auto aim and adjust power for distance
-            if(gamepad1.a) {
+            // OUTTAKE CONTROLS
+            if(gamepad1.dpad_left) {
+                outtakePower = 0.40;
+            } else if(gamepad1.dpad_up) {
+                outtakePower = 0.42;
+            } else if(gamepad1.dpad_right) {
+                outtakePower = 0.44;
+            } else if(gamepad1.dpad_down) {
+                outtakePower = 0.38;
+            }
+
+            if(gamepad1.right_bumper) {
+                outtake.setVelocity(MAX_TICKS * outtakePower);
+            }
+            else if (gamepad1.right_trigger > 0.1) {
+                outtake.setVelocity(MAX_TICKS * 0.50);
+            }
+            else outtake.setVelocity(0);
+
+            // INTAKE CONTROLS
+            if (gamepad1.a) {
+                intake.setPower(1.0);
+            }
+            else if (gamepad1.b){
+                intake.setPower(0.5);
+            }
+            else if (gamepad1.y){
+                intake.setPower(-0.5);
+            }
+            else intake.setPower(0.0);
+
+            // Hold 'x' to auto aim and adjust power for distance
+            if(gamepad1.x) {
                 LLResult result = limelight.getLatestResult();
 
                 if (result != null && result.isValid() && !result.getFiducialResults().isEmpty()) {
@@ -83,50 +118,50 @@ public class MAIN_Power_vs_Distance extends LinearOpMode {
                     double distanceMeters = Math.hypot(pose.getPosition().x, pose.getPosition().z);
                     double distanceInches = distanceMeters * 39.37;
 
-                    double outtakePower;
+                    //double outtakePower;
+                    // TODO adjust correctly power for distance
                     if (distanceInches < 24) outtakePower = 0.6;
                     else if (distanceInches < 36) outtakePower = 0.7;
                     else if (distanceInches < 48) outtakePower = 0.8;
                     else outtakePower = 0.9;
 
-                    double targetVelocity = outtakePower * MAX_TICKS;
-                    outtake.setVelocity(targetVelocity);
+                    outtake.setVelocity(MAX_TICKS * outtakePower);
 
                     // Telemetry
                     telemetry.addData("AprilTag ID", tag.getFiducialId());
                     telemetry.addData("Tag X", "%.1f degrees", tagX);
                     telemetry.addData("Auto Turn", "%.2f", rx);
                     telemetry.addData("Distance", "%.1f inches", distanceInches);
-                    telemetry.addData("Target Velocity", "%.0f ticks/sec", targetVelocity);
+                    telemetry.addData("Target Velocity", "%.0f ticks/sec", outtake.getVelocity());
                 } else {
                     outtake.setVelocity(0);
                     telemetry.addData("AprilTag", "Not Detected");
                 }
-
-            } else if(gamepad1.b) {
-                outtake.setVelocity(1400);
-            } else if (gamepad1.x) {
-                outtake.setVelocity(2800);
             } else outtake.setVelocity(0);
 
-            // TODO outtake, intake, transfer, turret motor controls
-            if (gamepad1.right_trigger > 0.1) {
-                double intakePower = 1.0;
-                intake.setPower(intakePower);
-            }
-            else {
-                intake.setPower(0.0);
-            }
-
-            // DRIVING CALCULATIONS
+            // Driving Calculations
             double denominator = Math.max(Math.abs(ly) + Math.abs(lx) + Math.abs(rx), 1.0);
             frontLeft.setPower((ly + lx + rx) / denominator);
             backLeft.setPower((ly - lx + rx) / denominator);
             frontRight.setPower((ly - lx - rx) / denominator);
             backRight.setPower((ly + lx - rx) / denominator);
 
+            telemetry.addLine("--- CONTROLS ---");
+            telemetry.addData("Right Trigger", "outtake 0.50 power");
+            telemetry.addData("Right Bumper", "outtake variable (starts 0.40) power");
+            telemetry.addData("D-Pad", "Select Power Level");
+            telemetry.addData("A", "intake full speed");
+            telemetry.addData("B", "intake 1/2 speed");
+            telemetry.addData("Y", "intake REVERSE 1/2 speed");
+            telemetry.addData("X", "Auto Aim");
+            telemetry.addLine();
+            telemetry.addLine("--- TELEMETRY ---");
+            telemetry.addData("Outtake Power (1.0 max)", outtakePower);
+            telemetry.addData("Outtake Velocity (2800 max)", outtake.getVelocity());
+            telemetry.addData("Intake Power (1.0 max)", intake.getPower());
             telemetry.update();
         }
         limelight.stop();
     }
+
 }
