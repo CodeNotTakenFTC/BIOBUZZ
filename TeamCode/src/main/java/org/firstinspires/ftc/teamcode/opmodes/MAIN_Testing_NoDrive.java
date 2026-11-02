@@ -14,6 +14,9 @@ public class MAIN_Testing_NoDrive extends LinearOpMode {
     // 6000 RPM / 60 SEC/MIN * 28 TICKS/REV
     private static final double MAX_TICKS = 6000.0 / 60.0 * 28.0;
     private static double outtakePower = 0.40;
+    // Intake toggle flags
+    private boolean intakeToggle = false;
+    private boolean lastRB = false;   // previous right bumper state
 
     @Override
     public void runOpMode() {
@@ -37,43 +40,50 @@ public class MAIN_Testing_NoDrive extends LinearOpMode {
         while (opModeIsActive()) {
 
             // OUTTAKE CONTROLS
-            if(gamepad1.dpad_left) {
-                outtakePower = 0.40;
+            if(gamepad1.dpad_down) {
+                outtakePower = 0.38;
             } else if(gamepad1.dpad_up) {
                 outtakePower = 0.42;
             } else if(gamepad1.dpad_right) {
                 outtakePower = 0.44;
-            } else if(gamepad1.dpad_down) {
-                outtakePower = 0.38;
+            } else if(gamepad1.dpad_left) {
+                outtakePower = 0.40;
             }
 
-            if(gamepad1.right_bumper) {
+            if(gamepad1.left_bumper) {
                 outtake.setVelocity(MAX_TICKS * outtakePower);
             }
-            else if (gamepad1.right_trigger > 0.1) {
-                outtake.setVelocity(MAX_TICKS * 0.50);
+            else if (gamepad1.left_trigger > 0.1) {
+                outtake.setVelocity(MAX_TICKS);
             }
             else outtake.setVelocity(0);
 
-            // INTAKE CONTROLS
-            if (gamepad1.a) {
+            // INTAKE TOGGLE/CONTROLS
+            boolean rb = gamepad1.right_bumper;
+
+            // Rising edge detection: only toggles when RB goes from unpressed → pressed
+            if (rb && !lastRB) {
+                intakeToggle = !intakeToggle;
+            }
+            lastRB = rb;
+
+            // Apply the toggle state
+            if (intakeToggle) {
                 intake.setPower(1.0);
+            } else {
+                intake.setPower(0.0);
             }
-            else if (gamepad1.b){
-                intake.setPower(0.5);
+
+            if (gamepad1.right_trigger > 0.1){
+                intake.setPower(-1.0);
             }
-            else if (gamepad1.y){
-                intake.setPower(-0.5);
-            }
-            else intake.setPower(0.0);
 
             telemetry.addLine("--- CONTROLS ---");
-            telemetry.addData("Right Trigger", "outtake 0.50 power");
-            telemetry.addData("Right Bumper", "outtake variable (starts 0.40) power");
-            telemetry.addData("D-Pad", "Select Power Level");
-            telemetry.addData("A", "intake full speed");
-            telemetry.addData("B", "intake 1/2 speed");
-            telemetry.addData("Y", "intake REVERSE 1/2 speed");
+            telemetry.addData("Right Bumper", "intake full speed");
+            telemetry.addData("Right Trigger", "intake REVERSE full speed");
+            telemetry.addData("Hold X", "align with AprilTag/set Power vs Distance");
+            telemetry.addData("Left Bumper", "outtake variable (starts 0.40) power");
+            telemetry.addData("D-Pad", "Select Power Level [D 0.38, L 0.40, U 0.42, R 0.44]");
             telemetry.addLine();
             telemetry.addLine("--- TELEMETRY ---");
             telemetry.addData("Outtake Power (1.0 max)", outtakePower);
