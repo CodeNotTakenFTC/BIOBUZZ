@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
@@ -11,13 +13,12 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
+import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.OuttakeSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.TurretSubsystem;
 
 @Autonomous(name="Auto_V0", group="Odometry Auto")
 public class Auto_V0 extends LinearOpMode {
-
-    // TODO shooter and PIDF variables/coefficients
-    // 6000 RPM / 60 SEC/MIN * 28 TICKS/REV
-    public static double MAX_TICKS = 6000.0 / 60.0 * 28.0;
 
     // TODO other parameters (outtakePower, chargeTime, waitTime, etc.
     private double outtakePower = 0.40;
@@ -25,17 +26,13 @@ public class Auto_V0 extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        DcMotor intake = hardwareMap.get(DcMotor.class, "intake");
-        DcMotorEx outtake = hardwareMap.get(DcMotorEx.class, "outtake");
+        IntakeSubsystem intake = new IntakeSubsystem(hardwareMap);
 
-        // TODO set reverse and forward motors, brake, set PIDF coefficients
-        intake.setDirection(DcMotorSimple.Direction.REVERSE);
-        outtake.setDirection(DcMotorSimple.Direction.REVERSE);
+        OuttakeSubsystem outtake = new OuttakeSubsystem(hardwareMap);
 
-        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        outtake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        outtake.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(18, 0, 0, 13.5));
+        Pose2d beginPose = new Pose2d(60, -20, Math.toRadians(90));    // must match end of AUTO
+        MecanumDrive drive = new MecanumDrive(hardwareMap, beginPose);
+        TurretSubsystem turret = new TurretSubsystem(hardwareMap, true);
 
         waitForStart();
 
@@ -43,21 +40,55 @@ public class Auto_V0 extends LinearOpMode {
         // -- START AUTO SEQUENCE -- //
         // ------------------------- //
 
-       // TODO create starting pose
-        Pose2d beginPose = new Pose2d(0, 0, Math.toRadians(0));
-        MecanumDrive drive = new MecanumDrive(hardwareMap, beginPose);
-
-        // TODO set motors at start of auto
-        outtake.setVelocity(MAX_TICKS * outtakePower);
+        // SHOOTING SEQUENCE TODO put in a helper method
+        outtake.setRPM(6000 * outtakePower);
+        intake.intake();
         sleep(chargeTime);
+        outtake.openFeedServo();
 
-        intake.setPower(1.0);
+        if (isStopRequested()) return;
 
-        Actions.runBlocking(drive.actionBuilder(drive.localizer.getPose())
-                .waitSeconds(0.5)
-                .splineToLinearHeading(new Pose2d(12, 12, Math.toRadians(0)), Math.toRadians(90))
-                .strafeTo(new Vector2d(36, -66))
-                .build()
-        );
+        Action path1 = drive.actionBuilder(drive.localizer.getPose())
+                .splineToLinearHeading(new Pose2d(60, -45, Math.toRadians(90)), Math.toRadians(270))
+                .splineToLinearHeading(new Pose2d(24, -48, Math.toRadians(180)), Math.toRadians(180))
+                .splineToLinearHeading(new Pose2d(60, -20, Math.toRadians(90)), Math.toRadians(90))
+                .build();
+        Actions.runBlocking(driveAndAim(path1, drive, turret));
+
+        aimTurretAndWait(drive, turret);
+    }
+
+    private void aimTurretAndWait(MecanumDrive drive, TurretSubsystem turret) {
+        // Get current robot position
+        drive.updatePoseEstimate();
+        Pose2d robotPose = drive.localizer.getPose();
+
+        // Command turret to aim at scoring target
+        turret.update(robotPose);
+
+        // Wait until turret reaches target
+        while (opModeIsActive() && Math.abs(turret.getTargetPosition()- turret.getCurrentPosition()) > 10) {
+            idle();
+        }
+    }
+
+    private Action driveAndAim(Action driveAction, MecanumDrive drive, TurretSubsystem turret) {
+
+        return new Action() {
+            @Override
+            public boolean run(TelemetryPacket packet) {
+
+                // Let Road Runner execute its next step.
+                boolean pathRunning = driveAction.run(packet);
+
+                // Get the latest robot position from Pinpoint.
+                Pose2d robotPose = drive.localizer.getPose();
+
+                // Keep the turret aimed at the field target.
+                turret.update(robotPose);
+
+                return pathRunning;
+            }
+        };
     }
 }
