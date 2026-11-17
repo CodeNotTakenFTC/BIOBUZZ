@@ -16,6 +16,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 
 import java.util.List;
 
@@ -152,11 +153,13 @@ public class MAIN_Teleop_decode extends LinearOpMode {
                 // Only apply far-shot compensation if distance > 7.5 ft (90 in)
                 if (tag.ftcPose.range > 90) {
 
-                    if (tag.id == 20) {         // blue goal tag
+                    if (tag instanceof AprilTagSingleDetection &&
+                            ((AprilTagSingleDetection) tag).id == 20) {         // blue goal tag
                         // Needs to aim LEFT → positive offset (turns CCW)
                         bearingOffset = 3.0;   // adjust as needed
                     }
-                    else if (tag.id == 24) {    // red goal tag
+                    else if (tag instanceof AprilTagSingleDetection &&
+                            ((AprilTagSingleDetection) tag).id == 24) {    // red goal tag
                         // Needs to aim RIGHT → negative offset (turns CW)
                         bearingOffset = -3.0;   // adjust as needed
                     }
@@ -294,7 +297,7 @@ public class MAIN_Teleop_decode extends LinearOpMode {
             telemetry.addData("alignThreshold", alignThreshold);
 
             if (tagVisible) {
-                telemetry.addData("Tag ID", tag.id);
+                //telemetry.addData("Tag ID", tag.id);
                 telemetry.addData("Range (in)", tag.ftcPose.range);
             }
 
