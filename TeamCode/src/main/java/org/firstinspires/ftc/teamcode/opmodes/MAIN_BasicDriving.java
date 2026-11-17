@@ -1,11 +1,14 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+@Disabled
 @TeleOp(name = "MAIN_BasicDriving", group="MAIN")
 public class MAIN_BasicDriving extends LinearOpMode {
+
 
     @Override
     public void runOpMode() {

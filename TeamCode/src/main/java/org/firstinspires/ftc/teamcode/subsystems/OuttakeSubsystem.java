@@ -17,8 +17,8 @@ public class OuttakeSubsystem {
     private static final double MAX_RPM = 6000.0;
 
     // Servo positions
-    private static final double SERVO_OPEN = 0.3;
-    private static final double SERVO_CLOSED = 0.0;
+    private static final double SERVO_OPEN = 0.0;
+    private static final double SERVO_CLOSED = 0.16;
 
     public OuttakeSubsystem(HardwareMap hardwareMap) {
 
@@ -30,9 +30,10 @@ public class OuttakeSubsystem {
         outtakeMotor.setDirection(DcMotor.Direction.FORWARD);
         outtakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         outtakeMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //feedServo.setDirection(Servo.Direction.REVERSE);
 
         // Your existing velocity PIDF values
-        outtakeMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(18, 0, 0, 13.5));
+        outtakeMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(22, 0, 0, 13.5));
 
         // Initial positions
         outtakeMotor.setVelocity(0);

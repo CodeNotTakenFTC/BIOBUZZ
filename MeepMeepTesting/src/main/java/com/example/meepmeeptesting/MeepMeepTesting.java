@@ -36,17 +36,18 @@ public class MeepMeepTesting {
 
         myBot.runAction(
                 myBot.getDrive()
-                        .actionBuilder(new Pose2d(60, -14, Math.toRadians(180)))
+                        .actionBuilder(new Pose2d(66, -16, Math.toRadians(90)))
                         .waitSeconds(1.0)
-                        .splineToLinearHeading(new Pose2d(60, -48, Math.toRadians(270)), Math.toRadians(270))
-                        .splineToLinearHeading(new Pose2d(60, -64, Math.toRadians(270)), Math.toRadians(270))
-                        .splineToLinearHeading(new Pose2d(30, -48, Math.toRadians(45)), Math.toRadians(180))
-                        //.splineToLinearHeading(new Pose2d(-60, -48, Math.toRadians(45)), Math.toRadians(225))
-                        .strafeTo(new Vector2d(-60, -52))
-                        .waitSeconds(1.0)
-                        .splineToLinearHeading(new Pose2d(-60, -24, Math.toRadians(180)), Math.toRadians(90))
-                        .splineToLinearHeading(new Pose2d(-60, -52, Math.toRadians(45)), Math.toRadians(180))
-                        .waitSeconds(1.0)
+                        .splineToLinearHeading(new Pose2d(66, -55, Math.toRadians(90)), Math.toRadians(270))
+                        .setTangent(Math.toRadians(90))
+                        .splineToLinearHeading(new Pose2d(24, -48, Math.toRadians(0)), Math.toRadians(180))
+                        .splineToLinearHeading(new Pose2d(-24, -42, Math.toRadians(0)), Math.toRadians(180))
+                        .splineToLinearHeading(new Pose2d(-48, -24, Math.toRadians(0)), Math.toRadians(180))
+                        //.strafeTo(new Vector2d(-60, -52))
+                        //.waitSeconds(1.0)
+                        //.splineToLinearHeading(new Pose2d(-60, -24, Math.toRadians(180)), Math.toRadians(90))
+                        //.splineToLinearHeading(new Pose2d(-60, -52, Math.toRadians(45)), Math.toRadians(180))
+                        //.waitSeconds(1.0)
                         .build()
         );
 

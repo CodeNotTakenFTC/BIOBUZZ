@@ -9,60 +9,42 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 public class TurretSubsystem {
 
     private final DcMotorEx turretMotor;
-
     private boolean manualDriving = false;
+
     // ==========================================
     // FIELD TARGET (inches)
     // ==========================================
-
     private static final double TARGET_X = 0.0;
-    private static final double TARGET_Y = 0.0;
+    private static final double TARGET_Y = -12.0;    //-12 RED, 12 BLUE
 
     // ==========================================
     // MOTOR / GEARING
     // ==========================================
-
-    // External gearing:
-    // 2.75 motor rotations = 1 turret rotation
-
     private static final double TURRET_GEAR_RATIO = 2.75;
-
-    // Verify this for your exact 5203 motor!
-    // Encoder ticks per motor output revolution.
-
     private static final double MOTOR_OUTPUT_TICKS_PER_REV = 384.5;
-
     private static final double TICKS_PER_DEGREE = (MOTOR_OUTPUT_TICKS_PER_REV * TURRET_GEAR_RATIO) / 360.0;
-
 
     // ==========================================
     // TURRET LIMITS
     // ==========================================
-
-    private static final double MIN_ANGLE = -170.0;
-    private static final double MAX_ANGLE = 100.0;
+    private static final double MIN_ANGLE = -90.0;
+    private static final double MAX_ANGLE = 170.0;
     private static final double MAX_POWER = 0.8;
 
     // ==========================================
     // CONSTRUCTOR
     // ==========================================
-
     public TurretSubsystem(HardwareMap hardwareMap, boolean resetEncoder) {
 
         turretMotor = hardwareMap.get(DcMotorEx.class, "turret");
         turretMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // Assumes turret is physically centered
-        // when the OpMode initializes.
         if (resetEncoder) {
             turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
-
         turretMotor.setTargetPosition(0);
-
         turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
         turretMotor.setPower(0);
     }
 
