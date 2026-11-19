@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -15,9 +16,10 @@ import org.firstinspires.ftc.teamcode.subsystems.TurretSubsystem;
 @Autonomous(name="Auto_V1", group="Odometry Auto")
 public class Auto_V1 extends LinearOpMode {
 
-    private final double outtakePower = 0.62;
+    private final double outtakePower = 0.56;  //0.56 fresh battery
     private final int chargeTime = 5500;
     private final int launchTime = 1200;
+    private final double waitTime = 0.5;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -36,47 +38,80 @@ public class Auto_V1 extends LinearOpMode {
 
         // charging sequence
         outtake.setRPM(6000 * outtakePower);
+        aimTurretAndWait(drive, turret);
         sleep(chargeTime);
         intake.intake();
 
         // shoot preload and tip #1
         launchSequence(drive, turret, outtake);
 
-        // back into garden, collect pollen, drive to opposite flower
+        // back into garden, collect pollen, drive back to starting location
         Action path1 = drive.actionBuilder(drive.localizer.getPose())
-                .splineToLinearHeading(new Pose2d(66, -55, Math.toRadians(90)), Math.toRadians(270))
-                .setTangent(Math.toRadians(135))
-                .splineToLinearHeading(new Pose2d(24, -48, Math.toRadians(45)), Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(-24, -42, Math.toRadians(0)), Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(-54, -24, Math.toRadians(0)), Math.toRadians(180))
+                .strafeTo(new Vector2d(66, -64))
+                .strafeTo(new Vector2d(66, -16))
                 .build();
         Actions.runBlocking(driveAndAim(path1, drive, turret));
 
-        // shoot 4 pollen
-        aimTurretAndWait(drive, turret);
-        outtake.openFeedServo();
-        sleep(launchTime);
-        outtake.closeFeedServo();
+        // shoot pollen guarantee tip #1
+        launchSequence(drive, turret, outtake);
 
-        //intake.scoopDown(); TODO: add to intake subsystem
-
-        // collect 4 pollen from flower
+        // drive to in front of near flower
         Action path2 = drive.actionBuilder(drive.localizer.getPose())
-                .splineToLinearHeading(new Pose2d(-60, -24, Math.toRadians(0)), Math.toRadians(180))
-                .waitSeconds(1.0)
-                .splineToLinearHeading(new Pose2d(-54, -24, Math.toRadians(0)), Math.toRadians(0))
+                .strafeTo(new Vector2d(24, -48))
                 .build();
         Actions.runBlocking(driveAndAim(path2, drive, turret));
+
+        intake.flowerDown();
+        sleep(200);
+
+        // collect 4 pollen from close flower
+        Action path22 = drive.actionBuilder(drive.localizer.getPose())
+                .strafeTo(new Vector2d(24, -60))
+                .waitSeconds(waitTime)
+                .strafeTo(new Vector2d(24, -40))
+                .build();
+        Actions.runBlocking(driveAndAim(path22, drive, turret));
+
+        intake.flowerUp();
+
+        // go to opposite launch zone
+        Action path3 = drive.actionBuilder(drive.localizer.getPose())
+                .turnTo(Math.toRadians(0))
+                .strafeTo(new Vector2d(-42, -30))
+                .strafeTo(new Vector2d(-42, -16))
+                .build();
+        Actions.runBlocking(driveAndAim(path3, drive, turret));
+
+        // shoot 4 pollen
+        launchSequence(drive, turret, outtake);
+
+        // position in front of flower
+        Action path33 = drive.actionBuilder(drive.localizer.getPose())
+                .strafeTo(new Vector2d(-42, -16))
+                .build();
+        Actions.runBlocking(driveAndAim(path33, drive, turret));
+
+        intake.flowerDown();
+        sleep(200);
+
+        // collect 4 pollen from far flower
+        Action path4 = drive.actionBuilder(drive.localizer.getPose())
+                .strafeTo(new Vector2d(-54, -16))
+                .waitSeconds(waitTime)
+                .strafeTo(new Vector2d(-45, -16))
+                .build();
+        Actions.runBlocking(driveAndAim(path4, drive, turret));
+
+        intake.flowerUp();
 
         // shoot 4 pollen and tip #2
         launchSequence(drive, turret, outtake);
 
         // park
-        Action path3 = drive.actionBuilder(drive.localizer.getPose())
-                .splineToLinearHeading(new Pose2d(-42, -60, Math.toRadians(270)), Math.toRadians(270))
+        Action path5 = drive.actionBuilder(drive.localizer.getPose())
+                .strafeTo(new Vector2d(-40, -52)) // TODO: enter into MAIN
                 .build();
-        Actions.runBlocking(driveAndAim(path3, drive, turret));
-
+        Actions.runBlocking(driveAndAim(path5, drive, turret));
     }
 
     private void launchSequence(MecanumDrive drive, TurretSubsystem turret, OuttakeSubsystem outtake) {

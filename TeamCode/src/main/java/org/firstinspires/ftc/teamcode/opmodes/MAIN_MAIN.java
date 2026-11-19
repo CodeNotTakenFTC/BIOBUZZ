@@ -25,13 +25,15 @@ public class MAIN_MAIN extends LinearOpMode {
     //private static final double MAX_TICKS = 6000.0 / 60.0 * 28.0;
     //private static final double SERVO1_OPEN = 0.3;
     //private static final double SERVO1_CLOSED = 0.0;
-    private static double outtakePower = 0.62;
+    private static double outtakePower = 0.60;
     public static double kTurn = 0.025;
-    // Intake and outtake toggle flags
+    // Intake and outtake and flower toggle flags
     private boolean intakeToggle = false;
     private boolean lastRB = false;   // previous right bumper state
     private boolean outtakeToggle = false;
     private boolean lastLB = false;
+    private boolean flowerToggle = false;
+    private boolean lastXB = false;
     // manual mode flags
     private boolean manualMode = false;
     private boolean xWasPressed = false;
@@ -48,7 +50,7 @@ public class MAIN_MAIN extends LinearOpMode {
 
         OuttakeSubsystem outtake = new OuttakeSubsystem(hardwareMap);
 
-        Pose2d beginPose = new Pose2d(-42, -60, Math.toRadians(270)); // must match end of AUTO
+        Pose2d beginPose = new Pose2d(-40, -52, Math.toRadians(0)); // TODO must match end of AUTO
         MecanumDrive drive = new MecanumDrive(hardwareMap, beginPose);
         TurretSubsystem turret = new TurretSubsystem(hardwareMap, false);
 
@@ -69,6 +71,8 @@ public class MAIN_MAIN extends LinearOpMode {
         limelight.pipelineSwitch(0);
         limelight.start();
 
+        //intake.flowerUp();
+
         // FTC Dashboard and Camera Stream
         FtcDashboard dashboard = FtcDashboard.getInstance();
         dashboard.startCameraStream(limelight, 30);
@@ -81,15 +85,43 @@ public class MAIN_MAIN extends LinearOpMode {
             double lx = gamepad1.left_stick_x;  // Strafe
             double rx = gamepad1.right_stick_x; // Turn
 
+            /*
+            if(gamepad1.x) {
+                lflower.setPosition(0.5485);
+                rflower.setPosition(0.4515);
+            } else {
+                lflower.setPosition(1);
+                rflower.setPosition(0);
+            }
+            */
+
+            // INTAKE CONTROLS/TOGGLE
+            boolean rb = gamepad1.right_bumper;
+
+            if (rb && !lastRB) {
+                intakeToggle = !intakeToggle;
+            }
+            lastRB = rb;
+
+            if (gamepad1.right_trigger > 0.1) {
+                intake.reverse();
+            }
+            else if (intakeToggle) {
+                intake.intake();
+            }
+            else {
+                intake.stop();
+            }
+
             // OUTTAKE POWER SELECTION
             if(gamepad1.dpad_down) {
-                outtakePower = 0.56;
-            } else if(gamepad1.dpad_up) {
                 outtakePower = 0.58;
-            } else if(gamepad1.dpad_right) {
-                outtakePower = 0.60;
-            } else if(gamepad1.dpad_left) {
+            } else if(gamepad1.dpad_up) {
                 outtakePower = 0.62;
+            //} //else if(gamepad1.dpad_right) {
+                //outtakePower = 0.60;
+            } else if(gamepad1.dpad_left) {
+                outtakePower = 0.60;
             }
 
             // OUTTAKE CONTROLS/TOGGLE
@@ -108,27 +140,22 @@ public class MAIN_MAIN extends LinearOpMode {
             }
             else outtake.stop();
 
+            // FLOWER SCOOP TOGGLE
+            boolean xb = gamepad1.x;
 
-            // INTAKE CONTROLS/TOGGLE
-            boolean rb = gamepad1.right_bumper;
-
-            if (rb && !lastRB) {
-                intakeToggle = !intakeToggle;
+            if (xb && !lastXB) {
+                flowerToggle = !flowerToggle;
             }
-            lastRB = rb;
+            lastXB = xb;
 
-            // Intake direction
-            if (gamepad1.right_trigger > 0.1) {
-                intake.reverse();
-            }
-            else if (intakeToggle) {
-                intake.intake();
+            if (flowerToggle) {
+                intake.flowerDown();
             }
             else {
-                intake.stop();
+                intake.flowerUp();
             }
 
-            // SERVO CONTROL
+            // LAUNCH SERVO CONTROL
             if (gamepad1.a) {
                 outtake.openFeedServo();
             }
@@ -155,9 +182,9 @@ public class MAIN_MAIN extends LinearOpMode {
             }
 
             // POSE RESET
-            if (gamepad1.bWasPressed()) {
+            if (gamepad1.dpad_right) {
                 drive.updatePoseEstimate();
-                drive.localizer.setPose(new Pose2d(66, -66, Math.toRadians(0)));
+                drive.localizer.setPose(new Pose2d(64, -64, Math.toRadians(0)));
             }
 
             telemetry.addData("Turret Mode", manualMode ? "MANUAL" : "AUTO");
@@ -171,7 +198,7 @@ public class MAIN_MAIN extends LinearOpMode {
             telemetry.addData("Turret Target", turret.getTargetPosition());
 
             // MANUAL AUTO AIM
-            if(gamepad1.x) {
+            if(gamepad1.y) {
                 LLResult result = limelight.getLatestResult();
 
                 if (result != null && result.isValid() && !result.getFiducialResults().isEmpty()) {
@@ -228,8 +255,9 @@ public class MAIN_MAIN extends LinearOpMode {
             // TODO add dashboard telemetry
 
         }
-        limelight.stop();
-        turret.stop();
+        intake.stop();
         outtake.stop();
+        turret.stop();
+        limelight.stop();
     }
 }

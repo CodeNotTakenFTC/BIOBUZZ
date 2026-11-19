@@ -33,11 +33,11 @@ public class OuttakeSubsystem {
         //feedServo.setDirection(Servo.Direction.REVERSE);
 
         // Your existing velocity PIDF values
-        outtakeMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(22, 0, 0, 13.5));
+        outtakeMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(20, 0, 0, 13));
 
         // Initial positions
         outtakeMotor.setVelocity(0);
-        feedServo.setPosition(SERVO_CLOSED);
+        //feedServo.setPosition(SERVO_CLOSED);
     }
 
     // Set outtake speed in RPM

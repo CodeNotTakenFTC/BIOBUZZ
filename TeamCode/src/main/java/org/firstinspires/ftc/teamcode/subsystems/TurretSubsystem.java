@@ -15,7 +15,7 @@ public class TurretSubsystem {
     // FIELD TARGET (inches)
     // ==========================================
     private static final double TARGET_X = 0.0;
-    private static final double TARGET_Y = -12.0;    //-12 RED, 12 BLUE
+    private static final double TARGET_Y = -9.0;    //-12 RED, 12 BLUE
 
     // ==========================================
     // MOTOR / GEARING
