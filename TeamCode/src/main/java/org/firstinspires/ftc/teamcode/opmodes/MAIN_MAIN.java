@@ -21,10 +21,6 @@ import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 @TeleOp(name="MAIN_MAIN", group="MAIN")
 public class MAIN_MAIN extends LinearOpMode {
 
-    // 6000 RPM / 60 SEC/MIN * 28 TICKS/REV
-    //private static final double MAX_TICKS = 6000.0 / 60.0 * 28.0;
-    //private static final double SERVO1_OPEN = 0.3;
-    //private static final double SERVO1_CLOSED = 0.0;
     private static double outtakePower = 0.60;
     public static double kTurn = 0.025;
     // Intake and outtake and flower toggle flags
@@ -71,8 +67,6 @@ public class MAIN_MAIN extends LinearOpMode {
         limelight.pipelineSwitch(0);
         limelight.start();
 
-        //intake.flowerUp();
-
         // FTC Dashboard and Camera Stream
         FtcDashboard dashboard = FtcDashboard.getInstance();
         dashboard.startCameraStream(limelight, 30);
@@ -84,16 +78,6 @@ public class MAIN_MAIN extends LinearOpMode {
             double ly = -gamepad1.left_stick_y; // Forward/Backward
             double lx = gamepad1.left_stick_x;  // Strafe
             double rx = gamepad1.right_stick_x; // Turn
-
-            /*
-            if(gamepad1.x) {
-                lflower.setPosition(0.5485);
-                rflower.setPosition(0.4515);
-            } else {
-                lflower.setPosition(1);
-                rflower.setPosition(0);
-            }
-            */
 
             // INTAKE CONTROLS/TOGGLE
             boolean rb = gamepad1.right_bumper;
@@ -167,17 +151,15 @@ public class MAIN_MAIN extends LinearOpMode {
             drive.updatePoseEstimate();
             Pose2d robotPose = drive.localizer.getPose();
 
-            // Toggle between automatic and manual aiming.
+            // Toggle between automatic and manual aiming
             if (gamepad2.x && !xWasPressed) {
                 manualMode = !manualMode;
             }
             xWasPressed = gamepad2.x;
 
             if (manualMode) {
-                // Driver controls turret with right stick.
                 turret.manualControl(gamepad2.right_stick_x);
             } else {
-                // Normal automatic field aiming.
                 turret.update(robotPose);
             }
 
@@ -238,14 +220,6 @@ public class MAIN_MAIN extends LinearOpMode {
             frontRight.setPower((ly - lx - rx) / denominator);
             backRight.setPower((ly + lx - rx) / denominator);
 
-            telemetry.addLine("--- CONTROLS ---");
-            telemetry.addData("Right Bumper", "intake full speed");
-            telemetry.addData("Right Trigger", "intake REVERSE full speed");
-            telemetry.addData("Hold X", "align with AprilTag/set Power vs Distance");
-            telemetry.addData("Left Bumper", "outtake variable (starts 0.40) power");
-            telemetry.addData("D-Pad", "Select Power Level [D 0.38, L 0.40, U 0.42, R 0.44]");
-            telemetry.addData("Hold A", "actuate outtake control servo");
-            telemetry.addLine();
             telemetry.addLine("--- TELEMETRY ---");
             telemetry.addData("Intake Power (1.0 max)", intake.getPower());
             telemetry.addData("Outtake Power (1.0 max)", outtakePower);
