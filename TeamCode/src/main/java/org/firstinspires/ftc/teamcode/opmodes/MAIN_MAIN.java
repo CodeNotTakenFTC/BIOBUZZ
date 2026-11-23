@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 @TeleOp(name="MAIN_MAIN", group="MAIN")
 public class MAIN_MAIN extends LinearOpMode {
 
-    private static double outtakePower = 0.60;
+    private static double outtakePower = 0.575;
     public static double kTurn = 0.025;
     // Intake and outtake and flower toggle flags
     private boolean intakeToggle = false;
@@ -99,7 +99,7 @@ public class MAIN_MAIN extends LinearOpMode {
 
             // OUTTAKE POWER SELECTION
             if(gamepad1.dpad_down) {
-                outtakePower = 0.58;
+                outtakePower = 0.575;
             } else if(gamepad1.dpad_up) {
                 outtakePower = 0.62;
             //} //else if(gamepad1.dpad_right) {
@@ -141,6 +141,7 @@ public class MAIN_MAIN extends LinearOpMode {
 
             // LAUNCH SERVO CONTROL
             if (gamepad1.a) {
+                intake.intake();
                 outtake.openFeedServo();
             }
             else {

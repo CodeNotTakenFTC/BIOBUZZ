@@ -74,6 +74,7 @@ public class Auto_V1 extends LinearOpMode {
 
         intake.flowerUp();
 
+
         // go to opposite launch zone
         Action path3 = drive.actionBuilder(drive.localizer.getPose())
                 .turnTo(Math.toRadians(0))
@@ -93,6 +94,7 @@ public class Auto_V1 extends LinearOpMode {
 
         intake.flowerDown();
         sleep(200);
+
 
         // collect 4 pollen from far flower
         Action path4 = drive.actionBuilder(drive.localizer.getPose())
